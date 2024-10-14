@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:form/detail.dart';
 
 void main() => runApp(const MyApp());
 
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+//---------------------------------------------------------------------------//
 // Define a custom Form widget.
 class MyCustomForm extends StatefulWidget {
   const MyCustomForm({Key? key}) : super(key: key);
@@ -38,8 +40,14 @@ class MyCustomForm extends StatefulWidget {
 class MyCustomFormState extends State<MyCustomForm> {
   final emailController = TextEditingController();
   final senhaController = TextEditingController();
+  final nameController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
+  String? sexoSelecionado;
+  List<String> dropDownOptions = [
+    "Masculino",
+    "Feminino",
+  ];
 
   @override
   void initState() {
@@ -55,11 +63,34 @@ class MyCustomFormState extends State<MyCustomForm> {
       child: ListView(
         padding: const EdgeInsets.all(32),
         children: <Widget>[
+          buildName(),
+          const SizedBox(
+            height: 24,
+          ),
           buildEmail(),
           const SizedBox(
             height: 24,
           ),
           buildPassword(),
+          const SizedBox(
+            height: 24,
+          ),
+          DropdownButton<String>(
+              hint: const Text('Sexo'),
+              borderRadius: BorderRadius.circular(10),
+              dropdownColor: Colors.amber,
+              value: sexoSelecionado,
+              items: dropDownOptions
+                  .map((l) => DropdownMenuItem(
+                        value: l,
+                        child: Text(l),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  sexoSelecionado = value;
+                });
+              }),
           const SizedBox(
             height: 24,
           ),
@@ -70,16 +101,57 @@ class MyCustomFormState extends State<MyCustomForm> {
             ),
             onPressed: () {
               if (_formKey.currentState!.validate()) {
-                print('Email: ${emailController.text}');
-                print('Password: ${senhaController.text}');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Detail(
+                            name: nameController.text,
+                            email: emailController.text,
+                            sexo: sexoSelecionado,
+                          ),
+                          ),
+                ).then((_) {
+        // Limpa os campos após a navegação
+        nameController.clear();
+        emailController.clear();
+        senhaController.clear();
+        setState(() {
+          sexoSelecionado = null;
+        });
+       });
+                
               }
             },
             child: const Text('Submit'),
+            
           )
         ],
       ),
     );
   }
+
+  Widget buildName() => TextFormField(
+        controller: nameController,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Obrigatório informar o nome';
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          hintText: 'Your name',
+          labelText: 'Nome',
+          border: const OutlineInputBorder(),
+          prefixIcon: const Icon(Icons.person),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              nameController.clear();
+            },
+          ),
+        ),
+        keyboardType: TextInputType.emailAddress,
+      );
 
   Widget buildEmail() => TextFormField(
         controller: emailController,
@@ -90,7 +162,7 @@ class MyCustomFormState extends State<MyCustomForm> {
           return null;
         },
         decoration: InputDecoration(
-          hintText: 'name@example.com',
+          hintText: 'email@example.com',
           labelText: 'E-mail',
           border: const OutlineInputBorder(),
           prefixIcon: const Icon(Icons.email),
